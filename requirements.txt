@@ -1,0 +1,20 @@
+# Зависимости для Telegram Voice-to-Text Bot
+
+# Основные библиотеки
+python-telegram-bot==20.7
+python-dotenv==1.0.0
+
+# Для работы с аудио
+pydub==0.25.1
+ffmpeg-python==0.2.0
+
+# Для распознавания речи (Whisper)
+openai-whisper==20231117
+torch>=2.0.0
+numpy>=1.20.0
+
+# Для распознавания речи (Vosk) - опционально
+vosk==0.3.45
+
+# Для обработки данных
+requests==2.31.0
