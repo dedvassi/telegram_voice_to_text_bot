@@ -1,5 +1,5 @@
 """
-Модуль для распознавания речи с использованием различных движков.
+Исправленный модуль для распознавания речи с использованием различных движков.
 Поддерживает Whisper и Vosk.
 """
 
@@ -18,7 +18,7 @@ class SpeechRecognitionEngine(ABC):
     """Абстрактный класс для движков распознавания речи."""
     
     @abstractmethod
-    def recognize(self, audio_path):
+    def recognize_speech(self, audio_path):
         """
         Распознает речь из аудиофайла.
         
@@ -29,6 +29,11 @@ class SpeechRecognitionEngine(ABC):
             str: Распознанный текст.
         """
         pass
+    
+    # Для обратной совместимости
+    def recognize(self, audio_path):
+        """Алиас для recognize_speech для обратной совместимости."""
+        return self.recognize_speech(audio_path)
 
 
 class WhisperEngine(SpeechRecognitionEngine):
@@ -49,7 +54,7 @@ class WhisperEngine(SpeechRecognitionEngine):
             logger.error(f"Ошибка при загрузке модели Whisper: {e}")
             raise
     
-    def recognize(self, audio_path):
+    def recognize_speech(self, audio_path):
         """
         Распознает речь из аудиофайла с помощью Whisper.
         
@@ -110,7 +115,7 @@ class VoskEngine(SpeechRecognitionEngine):
             logger.error(f"Ошибка при инициализации Vosk: {e}")
             raise
     
-    def recognize(self, audio_path):
+    def recognize_speech(self, audio_path):
         """
         Распознает речь из аудиофайла с помощью Vosk.
         

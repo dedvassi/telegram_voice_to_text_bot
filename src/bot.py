@@ -26,6 +26,8 @@ from config import (
     LOG_FILE
 )
 from speech_recognition_engine import get_speech_recognition_engine
+# Импорт модуля для генерации протоколов
+from protocol_bot import integrate_protocol_bot
 
 # Настройка логирования
 logging.basicConfig(
@@ -61,7 +63,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.message.reply_text(
         f"Привет, {user.first_name}! 👋\n\n"
         f"Я бот для преобразования голосовых сообщений в текст. "
-        f"Просто отправь мне голосовое сообщение, и я верну его текстовую расшифровку."
+        f"Просто отправь мне голосовое сообщение, и я верну его текстовую расшифровку.\n\n"
+        f"Используй команду /protocol для создания структурированного протокола встречи на основе голосового сообщения."
     )
 
 
@@ -75,7 +78,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "📋 *Доступные команды:*\n"
         "/start - Начать работу с ботом\n"
         "/help - Показать эту справку\n"
-        "/about - Информация о боте\n\n"
+        "/about - Информация о боте\n"
+        "/protocol - Создать протокол встречи из голосового сообщения\n\n"
         "⚙️ Бот использует технологию распознавания речи на основе "
         f"{SPEECH_RECOGNITION_ENGINE.capitalize()}.",
         parse_mode="Markdown"
@@ -90,7 +94,8 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         f"технологию распознавания речи {SPEECH_RECOGNITION_ENGINE.capitalize()}.\n\n"
         "🔧 *Технические детали:*\n"
         f"- Движок распознавания: {SPEECH_RECOGNITION_ENGINE.capitalize()}\n"
-        f"- Модель: {WHISPER_MODEL if SPEECH_RECOGNITION_ENGINE.lower() == 'whisper' else 'Стандартная'}\n\n"
+        f"- Модель: {WHISPER_MODEL if SPEECH_RECOGNITION_ENGINE.lower() == 'whisper' else 'Стандартная'}\n"
+        f"- Генерация протоколов: Ollama + LLaMA/Mistral\n\n"
         "📦 *Исходный код:*\n"
         "https://github.com/dedvassi/telegram_voice_to_text_bot",
         parse_mode="Markdown"
@@ -112,7 +117,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         
         # Создание временного файла для сохранения голосового сообщения
         temp_dir = Path(TEMP_DIR)
-        temp_dir.mkdir(exist_ok=True)
+        os.makedirs(temp_dir, exist_ok=True)
         
         voice_ogg_path = temp_dir / f"{voice.file_id}.ogg"
         
@@ -122,7 +127,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         logger.info(f"Голосовое сообщение сохранено: {voice_ogg_path}")
         
         # Распознавание речи
-        recognized_text = speech_engine.recognize(str(voice_ogg_path))
+        recognized_text = speech_engine.recognize_speech(str(voice_ogg_path))
         
         # Отправка результата
         if recognized_text:
@@ -180,6 +185,13 @@ def main() -> None:
     # Регистрация обработчиков сообщений
     application.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+    
+    # Интеграция функции генерации протоколов
+    try:
+        protocol_extension = integrate_protocol_bot(application, speech_engine)
+        logger.info("Функция генерации протоколов успешно интегрирована")
+    except Exception as e:
+        logger.error(f"Ошибка при интеграции функции генерации протоколов: {str(e)}")
     
     # Запуск бота
     logger.info("Бот запущен")
